@@ -1,4 +1,5 @@
 use chrono::Local;
+use core::panic;
 use dotenv::dotenv;
 use postgres::{Client, NoTls};
 use std::env;
@@ -15,8 +16,11 @@ pub fn get_config() -> Config {
     let conn_str = match env::var("FLAIR_DBSTRING") {
         Ok(val) => val,
         Err(e) => {
-            println!("FLAIR_DBSTRING not found in .env file");
-            panic!("{}", e);
+            println!(
+                "\x1b[31m Couldn't find FLAIR_DBSTRING in environment variables: {}\x1b[0m",
+                e.to_string()
+            );
+            panic!("FLAIR_DBSTRING not found");
         }
     };
     Config {
@@ -40,6 +44,8 @@ pub fn create_db_client() -> Client {
     let client = match Client::connect(&config.conn_str, NoTls) {
         Ok(client) => client,
         Err(e) => {
+            println!("Make sure the database is running and the connection string is correct");
+            println!("Format: host=localhost user=user password=******* dbname=database");
             panic!("Error connecting to database: {}", e);
         }
     };
