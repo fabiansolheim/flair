@@ -1,12 +1,13 @@
 use std::{fs, path::PathBuf};
 
-use crate::utils::{create_db_client, init_migration_table};
+use crate::utils::{create_db_client, get_config, init_migration_table};
 
 pub fn status() {
     let mut client = create_db_client();
     let _ = init_migration_table(&mut client);
+    let config = get_config();
 
-    match std::fs::read_dir("migrations") {
+    match std::fs::read_dir(config.migrations_path.as_path()) {
         Ok(migrations) => {
             if migrations.count() == 0 {
                 println!("No migration files found");
@@ -24,7 +25,7 @@ pub fn status() {
 
     let mut files_with_timestamps: Vec<(PathBuf, i64)> = Vec::new();
 
-    for entry in fs::read_dir("migrations").unwrap() {
+    for entry in fs::read_dir(config.migrations_path.as_path()).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
         if path.is_file() {
@@ -35,7 +36,7 @@ pub fn status() {
         }
     }
 
-    files_with_timestamps.sort_by_key(|&(_, timestamp)| timestamp);
+    files_with_timestamps.sort_unstable_by_key(|&(_, timestamp)| timestamp);
 
     for (path, version_id) in files_with_timestamps {
         let mut is_applied = false;
@@ -43,6 +44,7 @@ pub fn status() {
             "SELECT * FROM flair_migration WHERE version_id = {}",
             version_id
         );
+
         for _row in client.query(query.as_str(), &[]).unwrap() {
             is_applied = true;
         }
@@ -53,6 +55,9 @@ pub fn status() {
             "\x1b[31mnot applied\x1b[0m"
         };
 
-        println!("  {} - {}", path.to_str().unwrap(), applied);
+        println!("  {} - {}", &path.display(), applied);
     }
+
+    println!("\n \x1b[34mUse `flair up` to apply migrations\x1b[0m");
+    println!(" \x1b[34mUse `flair down` to revert migrations\x1b[0m");
 }
