@@ -10,5 +10,5 @@ Flair is a Rust-based cli tool designed to simplify database migration processes
 - **Revert Migration (Down)**: Revert the last applied migration, allowing for easy rollback of changes.
 
 ### Future Features
-- **Checksum verification
-- **Up or down specific migration
+- **Checksum verification**
+- **Up or down specific migration**
