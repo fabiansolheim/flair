@@ -8,3 +8,7 @@ Flair is a Rust-based cli tool designed to simplify database migration processes
 - **Migration Status**: Check the current status of all migrations, seeing which have been applied and which are pending.
 - **Apply Migrations (Up)**: Apply pending migrations to your database, updating it to the latest version.
 - **Revert Migration (Down)**: Revert the last applied migration, allowing for easy rollback of changes.
+
+### Future Features
+- **Checksum verification
+- **Up or down specific migration
