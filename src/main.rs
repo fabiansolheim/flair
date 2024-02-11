@@ -6,7 +6,7 @@ use utils::parse_args;
 
 enum Command {
     Down,
-    Init,
+    Init(String),
     Status,
     Up,
     Help,
@@ -21,7 +21,7 @@ fn main() {
     match command {
         Command::Up => up(),
         Command::Down => down(),
-        Command::Init => init(),
+        Command::Init(path) => init(path),
         Command::Help => cmd::help::help(),
         Command::Create(name) => create(name),
         Command::Status => status(),

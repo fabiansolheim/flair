@@ -4,11 +4,13 @@ use dotenv::dotenv;
 use postgres::{Client, NoTls};
 use std::env;
 use std::{fs, io::Error, path::PathBuf};
+use toml;
 
 use crate::Command;
 
 pub struct Config {
     pub conn_str: String,
+    pub migrations_path: PathBuf,
 }
 
 pub fn get_config() -> Config {
@@ -23,8 +25,26 @@ pub fn get_config() -> Config {
             panic!("FLAIR_DBSTRING not found");
         }
     };
-    Config {
-        conn_str: conn_str.to_string(),
+
+    let config_file = PathBuf::from("flair.toml");
+    if config_file.exists() {
+        let config = std::fs::read_to_string(config_file).unwrap();
+        let config: toml::Value = toml::from_str(config.as_str()).unwrap();
+        let path = config
+            .get("migrations")
+            .unwrap()
+            .get("path")
+            .unwrap()
+            .as_str()
+            .unwrap();
+        return Config {
+            conn_str: conn_str.to_string(),
+            migrations_path: PathBuf::from(path),
+        };
+    } else {
+        println!("\x1b[31mCouldn't find flair.toml file\x1b[0m");
+        println!("Run `flair init <path>` to create a flair.toml file");
+        panic!();
     }
 }
 
@@ -106,7 +126,12 @@ pub fn parse_args(args: &[String]) -> Command {
 
     match args[1].as_str() {
         "help" => Command::Help,
-        "init" => Command::Init,
+        "init" => {
+            if args.len() < 3 {
+                return Command::Init("migrations".to_string());
+            }
+            Command::Init(args[2].clone())
+        }
         "status" => Command::Status,
         "create" => {
             if args.len() < 3 {

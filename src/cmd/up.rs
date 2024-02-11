@@ -1,14 +1,15 @@
 use std::{fs, path::PathBuf};
 
-use crate::utils::{create_db_client, init_migration_table, parse_migration_file};
+use crate::utils::{create_db_client, get_config, init_migration_table, parse_migration_file};
 
 pub fn up() {
     let mut client = create_db_client();
     let _ = init_migration_table(&mut client);
+    let config = get_config();
 
     let mut files_with_timestamps: Vec<(PathBuf, i64)> = Vec::new();
 
-    for entry in fs::read_dir("migrations").unwrap() {
+    for entry in fs::read_dir(config.migrations_path).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
         if path.is_file() {
@@ -19,7 +20,7 @@ pub fn up() {
         }
     }
 
-    files_with_timestamps.sort_by_key(|&(_, timestamp)| timestamp);
+    files_with_timestamps.sort_unstable_by_key(|&(_, timestamp)| timestamp);
 
     for (path, version_id) in files_with_timestamps {
         let file_name = path.file_name().unwrap().to_str().unwrap();

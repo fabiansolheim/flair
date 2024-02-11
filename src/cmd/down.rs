@@ -1,8 +1,9 @@
-use crate::utils::{create_db_client, init_migration_table, parse_migration_file};
+use crate::utils::{create_db_client, get_config, init_migration_table, parse_migration_file};
 
 pub fn down() {
     let mut client = create_db_client();
     let _ = init_migration_table(&mut client);
+    let config = get_config();
 
     let applied_migrations_query =
       "SELECT version_id, name FROM flair_migration WHERE is_applied = true ORDER BY version_id DESC LIMIT 1";
@@ -11,7 +12,7 @@ pub fn down() {
     if let Some(row) = applied_migrations.iter().next() {
         let version_id: i64 = row.get("version_id");
         let file_name: String = row.get("name");
-        let path = std::path::Path::new("migrations").join(file_name);
+        let path = std::path::Path::new(config.migrations_path.as_path()).join(file_name);
 
         if path.exists() {
             let content = match parse_migration_file(&path) {
